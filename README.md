@@ -1,6 +1,6 @@
 # Course project: EDM baseline
 
-[Setup, training and evaluation](docs/edm_baseline.md) for the offline Breakout/Boxing baseline (100 × 1,000 updates, seed 0).
+[Experiment history, setup and evaluation](docs/edm_baseline.md) for the completed three-seed EDM baseline and the newer uniform-schedule Breakout/Boxing runs.
 
 # Diffusion for World Modeling: Visual Details Matter in Atari (NeurIPS 2024 Spotlight)
 
