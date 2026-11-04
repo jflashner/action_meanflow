@@ -1,20 +1,20 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 import torch
 import torch.nn as nn
 
 from envs import TorchEnv, WorldModelEnv
 from models.actor_critic import ActorCritic, ActorCriticConfig, ActorCriticLossConfig
-from models.diffusion import Denoiser, DenoiserConfig, SigmaDistributionConfig
+from models.diffusion import DenoiserConfig, FlowDenoiserConfig, make_denoiser, SelfForcingConfig, SigmaDistributionConfig
 from models.rew_end_model import RewEndModel, RewEndModelConfig
 from utils import extract_state_dict
 
 
 @dataclass
 class AgentConfig:
-    denoiser: DenoiserConfig
+    denoiser: Union[DenoiserConfig, FlowDenoiserConfig]
     rew_end_model: RewEndModelConfig
     actor_critic: ActorCriticConfig
     num_actions: int
@@ -28,7 +28,7 @@ class AgentConfig:
 class Agent(nn.Module):
     def __init__(self, cfg: AgentConfig) -> None:
         super().__init__()
-        self.denoiser = Denoiser(cfg.denoiser)
+        self.denoiser = make_denoiser(cfg.denoiser)
         self.rew_end_model = RewEndModel(cfg.rew_end_model)
         self.actor_critic = ActorCritic(cfg.actor_critic)
 
@@ -38,11 +38,13 @@ class Agent(nn.Module):
 
     def setup_training(
         self,
-        sigma_distribution_cfg: SigmaDistributionConfig,
+        sigma_distribution_cfg: Optional[SigmaDistributionConfig],
         actor_critic_loss_cfg: ActorCriticLossConfig,
         rl_env: Union[TorchEnv, WorldModelEnv],
+        self_forcing_cfg: Optional[SelfForcingConfig] = None,
     ) -> None:
         self.denoiser.setup_training(sigma_distribution_cfg)
+        self.denoiser.setup_self_forcing(self_forcing_cfg)
         self.actor_critic.setup_training(rl_env, actor_critic_loss_cfg)
 
     def load(
@@ -52,7 +54,7 @@ class Agent(nn.Module):
         load_rew_end_model: bool = True,
         load_actor_critic: bool = True,
     ) -> None:
-        sd = torch.load(Path(path_to_ckpt), map_location=self.device)
+        sd = torch.load(Path(path_to_ckpt), map_location=self.device, weights_only=False)
         sd = {k: extract_state_dict(sd, k) for k in ("denoiser", "rew_end_model", "actor_critic")}
         if load_denoiser:
             self.denoiser.load_state_dict(sd["denoiser"])

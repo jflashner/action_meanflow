@@ -1,3 +1,4 @@
+import copy
 from functools import partial
 from pathlib import Path
 import shutil
@@ -17,6 +18,7 @@ from agent import Agent
 from coroutines.collector import make_collector, NumToCollect
 from data import BatchSampler, collate_segments_to_batch, Dataset, DatasetTraverser
 from envs import make_atari_env, WorldModelEnv
+from models.diffusion import WorldModelDenoiser
 from utils import (
     broadcast_if_needed,
     build_ddp_wrapper,
@@ -34,6 +36,7 @@ from utils import (
     try_until_no_except,
     wandb_log,
 )
+from wm_metrics import next_frame_metrics, sample_segments
 
 
 class Trainer(StateDictMixin):
@@ -44,8 +47,9 @@ class Trainer(StateDictMixin):
         self._rank = dist.get_rank() if dist.is_initialized() else 0
         self._world_size = dist.get_world_size() if dist.is_initialized() else 1
 
-        # Pick a random seed
-        set_seed(torch.seed() % 10 ** 9)
+        # Seed (random if not specified)
+        seed = cfg.common.seed if cfg.common.seed is not None else torch.seed() % 10 ** 9
+        set_seed(seed + self._rank)
 
         # Device
         self._device = torch.device("cuda" if torch.cuda.is_available() else "cpu", self._rank)
@@ -63,6 +67,8 @@ class Trainer(StateDictMixin):
         # Flags
         self._is_static_dataset = cfg.static_dataset.path is not None
         self._is_model_free = cfg.training.model_free
+        self._is_world_model_only = cfg.training.get("world_model_only", False)
+        assert not (self._is_world_model_only and self._is_model_free)
 
         # Checkpointing
         self._path_ckpt_dir = Path("checkpoints")
@@ -153,7 +159,9 @@ class Trainer(StateDictMixin):
             return None if (self._is_static_dataset and cfg.static_dataset.ignore_sample_weights) else sample_weights
 
         c = cfg.denoiser.training
-        seq_length = cfg.agent.denoiser.inner_model.num_steps_conditioning + 1 + c.num_autoregressive_steps
+        self_forcing_cfg = instantiate(c.self_forcing) if c.get("self_forcing") is not None else None
+        num_self_forcing_steps = self_forcing_cfg.rollout_steps if (self_forcing_cfg is not None and self_forcing_cfg.prob > 0) else 0
+        seq_length = cfg.agent.denoiser.inner_model.num_steps_conditioning + 1 + c.num_autoregressive_steps + num_self_forcing_steps
         bs = make_batch_sampler(c.batch_size, seq_length, get_sample_weights(c.sample_weights))
         dl_denoiser_train = make_data_loader(batch_sampler=bs)
         dl_denoiser_test = DatasetTraverser(self.test_dataset, c.batch_size, seq_length)
@@ -184,9 +192,16 @@ class Trainer(StateDictMixin):
                 rl_env.predict_rew_end = torch.compile(rl_env.predict_rew_end, mode="reduce-overhead")
 
         # Setup training
-        sigma_distribution_cfg = instantiate(cfg.denoiser.sigma_distribution)
+        sigma_distribution_cfg = instantiate(cfg.denoiser.sigma_distribution) if cfg.denoiser.get("sigma_distribution") is not None else None
         actor_critic_loss_cfg = instantiate(cfg.actor_critic.actor_critic_loss)
-        self.agent.setup_training(sigma_distribution_cfg, actor_critic_loss_cfg, rl_env)
+        self.agent.setup_training(sigma_distribution_cfg, actor_critic_loss_cfg, rl_env, self_forcing_cfg)
+
+        # Exponential moving average of the denoiser weights (used for evaluation, not for imagination)
+        self._ema_decay = cfg.denoiser.training.get("ema_decay", None)
+        self.denoiser_ema = copy.deepcopy(self.agent.denoiser).requires_grad_(False) if self._ema_decay is not None else None
+
+        # Fixed test segments to measure generation quality during training
+        self._generation_eval_batch = None
 
         # Training state (things to be saved/restored)
         self.epoch = 0
@@ -327,7 +342,7 @@ class Trainer(StateDictMixin):
         self.agent.train()
         self.agent.zero_grad()
         to_log = []
-        model_names = ["actor_critic"] if self._is_model_free else self._model_names
+        model_names = ["actor_critic"] if self._is_model_free else ["denoiser"] if self._is_world_model_only else self._model_names
         for name in model_names:
             cfg = getattr(self._cfg, name).training
             if self.epoch > cfg.start_after_epochs:
@@ -339,12 +354,29 @@ class Trainer(StateDictMixin):
     def test_agent(self) -> Logs:
         self.agent.eval()
         to_log = []
-        model_names = [] if self._is_model_free else self._model_names[:-1]
+        model_names = [] if self._is_model_free else ["denoiser"] if self._is_world_model_only else self._model_names[:-1]
         for name in model_names:
             cfg = getattr(self._cfg, name).training
             if self.epoch > cfg.start_after_epochs:
                 to_log += self.test_component(name)
+                if name == "denoiser":
+                    to_log += self.test_generation()
         return to_log
+
+    @torch.no_grad()
+    def test_generation(self) -> Logs:
+        c = self._cfg.evaluation.get("generation")
+        if c is None or not c.nfe or self.test_dataset.num_episodes == 0:
+            return []
+        n = self._cfg.agent.denoiser.inner_model.num_steps_conditioning
+        if self._generation_eval_batch is None:
+            self._generation_eval_batch = sample_segments(self.test_dataset, c.num_samples, n + 1, seed=0)
+        denoiser = self.denoiser_ema if self.denoiser_ema is not None else self.agent.denoiser
+        denoiser.eval()
+        sampler_cfg = instantiate(self._cfg.world_model_env.diffusion_sampler)
+        metrics = next_frame_metrics(denoiser, sampler_cfg, self._generation_eval_batch, c.nfe, seed=0)
+        print({k: round(v, 3) for k, v in metrics.items()})
+        return [{f"denoiser/test/{k}": v for k, v in metrics.items()}]
 
     def train_component(self, name: str, steps: int) -> Logs:
         cfg = getattr(self._cfg, name).training
@@ -361,6 +393,8 @@ class Trainer(StateDictMixin):
         num_steps = cfg.grad_acc_steps * steps
 
         for i in trange(num_steps, desc=f"Training {name}", disable=self._rank > 0):
+            if name == "denoiser":
+                self.agent.denoiser.global_step = self.num_batch_train.get(name) // cfg.grad_acc_steps
             batch = next(data_iterator).to(self._device) if data_iterator is not None else None
             loss, metrics = model(batch) if batch is not None else model()
             loss.backward()
@@ -376,6 +410,9 @@ class Trainer(StateDictMixin):
 
                 opt.step()
                 opt.zero_grad()
+
+                if name == "denoiser" and self.denoiser_ema is not None:
+                    update_ema(self.denoiser_ema, self.agent.denoiser, self._ema_decay, self.num_batch_train.get(name) // cfg.grad_acc_steps)
 
                 if lr_sched is not None:
                     metrics["lr"] = lr_sched.get_last_lr()[0]
@@ -406,12 +443,23 @@ class Trainer(StateDictMixin):
         return to_log
 
     def load_state_checkpoint(self) -> None:
-        self.load_state_dict(torch.load(self._path_state_ckpt, map_location=self._device))
+        self.load_state_dict(torch.load(self._path_state_ckpt, map_location=self._device, weights_only=False))
 
     def save_checkpoint(self) -> None:
         if self._rank == 0:
             save_with_backup(self.state_dict(), self._path_state_ckpt)
-            self.train_dataset.save_to_default_path()
-            self.test_dataset.save_to_default_path()
-            self._keep_agent_copies(self.agent.state_dict(), self.epoch)
+            if not self._is_static_dataset:  # a static dataset may be shared by concurrent runs, never rewrite it
+                self.train_dataset.save_to_default_path()
+                self.test_dataset.save_to_default_path()
+            agent_sd = self.agent.state_dict()
+            if self.denoiser_ema is not None:
+                agent_sd.update({f"ema_denoiser.{k}": v for k, v in self.denoiser_ema.state_dict().items()})
+            self._keep_agent_copies(agent_sd, self.epoch)
             self._save_info_for_import_script(self.epoch)
+
+
+@torch.no_grad()
+def update_ema(ema: WorldModelDenoiser, model: WorldModelDenoiser, decay: float, step: int) -> None:
+    decay = min(decay, (1 + step) / (10 + step))  # warmup
+    ema_params = list(ema.parameters())
+    torch._foreach_lerp_(ema_params, [p.detach() for p in model.parameters()], 1 - decay)

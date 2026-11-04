@@ -1,0 +1,11 @@
+# @package _global_
+# Comparison point for self-forcing: GameNGen-style Gaussian noise augmentation of the context frames, with the
+# noise level given to the network.
+defaults:
+  - wm_meanflow
+
+agent:
+  denoiser:
+    context_noise_max: 0.7
+    context_noise_prob: 1.0
+    context_noise_inference: 0.0

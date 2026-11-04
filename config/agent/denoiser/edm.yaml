@@ -1,0 +1,11 @@
+# DIAMOND's EDM denoiser (the training noise distribution is in trainer.yaml: denoiser.sigma_distribution).
+defaults:
+  - _unet
+  - _self_
+
+_target_: models.diffusion.DenoiserConfig
+sigma_data: 0.5
+sigma_offset_noise: 0.3
+context_noise_max: 0.0  # > 0: GameNGen-style noise augmentation of the context frames
+context_noise_prob: 1.0
+context_noise_inference: 0.0

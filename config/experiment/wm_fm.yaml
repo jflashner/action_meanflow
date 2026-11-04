@@ -1,0 +1,14 @@
+# @package _global_
+# Baseline: flow matching in the same U-Net, evaluated with a few Euler steps.
+defaults:
+  - _wm_common
+  - override /agent/denoiser: fm
+  - override /sampler: flow
+
+world_model_env:
+  diffusion_sampler:
+    num_steps: 4
+
+evaluation:
+  generation:
+    nfe: [1, 2, 4, 8]

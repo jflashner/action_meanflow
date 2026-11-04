@@ -1,0 +1,4 @@
+# @package world_model_env.diffusion_sampler
+# Sampler of the flow denoisers (fm, meanflow, shortcut): uniform time grid from noise to data.
+_target_: models.diffusion.FlowSamplerConfig
+num_steps: 1

@@ -6,6 +6,7 @@ from functools import partial
 import json
 from pathlib import Path
 import random
+import time
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from omegaconf import OmegaConf
@@ -308,18 +309,28 @@ def skip_if_run_is_over(func: Callable) -> Callable:
     return inner
 
 
-def try_until_no_except(func: Callable) -> None:
-    while True:
+def try_until_no_except(func: Callable, max_attempts: int = 10, wait: float = 10.0) -> None:
+    for attempt in range(1, max_attempts + 1):
         try:
             func()
         except KeyboardInterrupt:
             break
-        except Exception:
-            continue
+        except Exception as e:
+            print(f"Attempt {attempt}/{max_attempts} failed: {e.__class__.__name__}: {e}")
+            if attempt == max_attempts:
+                raise
+            time.sleep(wait)
         else:
             break
 
 
-def wandb_log(logs: Logs, epoch: int):
+def wandb_log(logs: Logs, epoch: int, path_local_log: Optional[Path] = Path("metrics.jsonl")):
     for d in logs:
         wandb.log({"epoch": epoch, **d})
+    # Local copy of the logs, so that results do not depend on wandb
+    if path_local_log is not None:
+        to_float = lambda v: v.item() if isinstance(v, Tensor) and v.numel() == 1 else v
+        with path_local_log.open("a") as f:
+            for d in logs:
+                d = {k: to_float(v) for k, v in d.items()}
+                f.write(json.dumps({"epoch": epoch, **{k: v for k, v in d.items() if isinstance(v, (int, float))}}) + "\n")

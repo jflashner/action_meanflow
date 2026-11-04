@@ -1,0 +1,5 @@
+# Shell and Slurm scripts must keep LF line endings to run on the cluster
+*.sh text eol=lf
+*.sbatch text eol=lf
+*.py text eol=lf
+*.yaml text eol=lf

@@ -1,0 +1,14 @@
+# @package _global_
+# MeanFlow in the same U-Net, trained without a teacher, 1-step sampling.
+defaults:
+  - _wm_common
+  - override /agent/denoiser: meanflow
+  - override /sampler: flow
+
+world_model_env:
+  diffusion_sampler:
+    num_steps: 1
+
+evaluation:
+  generation:
+    nfe: [1, 2, 4]

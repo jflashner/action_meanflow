@@ -31,6 +31,7 @@ class DiffusionSampler:
         device = prev_obs.device
         b, t, c, h, w = prev_obs.size()
         prev_obs = prev_obs.reshape(b, t * c, h, w)
+        prev_obs, ctx_level = self.denoiser.augment_context(prev_obs, inference=True)
         s_in = torch.ones(b, device=device)
         gamma_ = min(self.cfg.s_churn / (len(self.sigmas) - 1), 2**0.5 - 1)
         x = torch.randn(b, c, h, w, device=device)
@@ -41,7 +42,7 @@ class DiffusionSampler:
             if gamma > 0:
                 eps = torch.randn_like(x) * self.cfg.s_noise
                 x = x + eps * (sigma_hat**2 - sigma**2) ** 0.5
-            denoised = self.denoiser.denoise(x, sigma, prev_obs, prev_act)
+            denoised = self.denoiser.denoise(x, sigma, prev_obs, prev_act, ctx_level)
             d = (x - denoised) / sigma_hat
             dt = next_sigma - sigma_hat
             if self.cfg.order == 1 or next_sigma == 0:
@@ -50,7 +51,7 @@ class DiffusionSampler:
             else:
                 # Heun's method
                 x_2 = x + d * dt
-                denoised_2 = self.denoiser.denoise(x_2, next_sigma * s_in, prev_obs, prev_act)
+                denoised_2 = self.denoiser.denoise(x_2, next_sigma * s_in, prev_obs, prev_act, ctx_level)
                 d_2 = (x_2 - denoised_2) / next_sigma
                 d_prime = (d + d_2) / 2
                 x = x + d_prime * dt

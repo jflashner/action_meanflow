@@ -1,0 +1,8 @@
+# MeanFlow (Geng et al., 2025): average velocity u(z_t, r, t), trained with the MeanFlow identity, 1-step sampling.
+defaults:
+  - _flow
+  - _self_
+
+objective: meanflow
+meanflow_ratio: 0.25  # paper default: 25% of samples with r != t
+adaptive_weight_p: 1.0  # paper default

@@ -1,0 +1,23 @@
+# Options shared by the flow denoisers (see src/models/diffusion/flow_denoiser.py).
+defaults:
+  - _unet
+  - _self_
+
+_target_: models.diffusion.FlowDenoiserConfig
+objective: ???
+sigma_data: 0.5  # rescaling of the context frames, as in EDM
+parameterization: u  # u: predict the (average) velocity | x: predict a clean frame
+loss_space: u  # u | x (x-space error, i.e. u error scaled by t)
+t_eps: 0.05
+time_loc: -0.4  # logit-normal on t, same distribution as DIAMOND's log-normal on sigma (logit(t) = log(sigma))
+time_scale: 1.2
+adaptive_weight_p: 0.0
+adaptive_weight_c: 1e-3
+meanflow_ratio: 0.25
+jvp: autograd  # autograd | finite_difference
+jvp_fd_eps: 5e-3
+shortcut_bootstrap_frac: 0.25
+shortcut_log2_min_step: 7
+context_noise_max: 0.0
+context_noise_prob: 1.0
+context_noise_inference: 0.0

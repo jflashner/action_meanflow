@@ -1,0 +1,9 @@
+# @package _global_
+# Ablation: MeanFlow with x-prediction (the network outputs a clean frame, u = (z_t - x) / t) and x-space loss.
+defaults:
+  - wm_meanflow
+
+agent:
+  denoiser:
+    parameterization: x
+    loss_space: x

@@ -1,0 +1,7 @@
+# Shortcut model (Frans et al., 2024): step size conditioning and self-consistency targets, 1 to few steps.
+defaults:
+  - _flow
+  - _self_
+
+objective: shortcut
+shortcut_bootstrap_frac: 0.25  # paper: 1/4 of the batch for self-consistency targets

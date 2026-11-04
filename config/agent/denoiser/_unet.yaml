@@ -1,0 +1,9 @@
+# DIAMOND's U-Net, shared by every denoiser so that only the training objective and sampler differ.
+inner_model:
+  _target_: models.diffusion.InnerModelConfig
+  img_channels: 3
+  num_steps_conditioning: 4
+  cond_channels: 256
+  depths: [2,2,2,2]
+  channels: [64,64,64,64]
+  attn_depths: [0,0,0,0]

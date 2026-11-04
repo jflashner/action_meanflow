@@ -1,0 +1,6 @@
+# Flow matching (rectified flow), sampled with a few Euler steps.
+defaults:
+  - _flow
+  - _self_
+
+objective: fm
