@@ -17,3 +17,13 @@ __pycache__/
 # Jupyter Notebook
 .ipynb_checkpoints
 
+
+# Local experiment artifacts
+.venv/
+.env
+.env.*
+.torch-cache/
+datasets/
+policies/
+logs/
+results/edm-uniform-100x1000-v1/

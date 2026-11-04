@@ -1,3 +1,7 @@
+# Course project: EDM baseline
+
+[Setup, training and evaluation](docs/edm_baseline.md) for the offline Breakout/Boxing baseline (100 × 1,000 updates, seed 0).
+
 # Diffusion for World Modeling: Visual Details Matter in Atari (NeurIPS 2024 Spotlight)
 
 [**TL;DR**] 💎 DIAMOND (DIffusion As a Model Of eNvironment Dreams) is a reinforcement learning agent trained entirely in a diffusion world model.

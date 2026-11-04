@@ -1,0 +1,90 @@
+{
+  "name": "edm-uniform-100x1000-v1",
+  "games": [
+    "Breakout",
+    "Boxing"
+  ],
+  "training_seeds": [
+    0
+  ],
+  "policy_repository": "eloialonso/diamond",
+  "policy_revision": "5d4abca9af6ab1b3ab1c6fc228cacb7281130f7f",
+  "policy_usage": "Actor weights only, for data collection. All evaluated denoisers train from scratch.",
+  "train_transition_target": 100000,
+  "minimum_train_episodes": 32,
+  "validation_episodes": 16,
+  "test_episodes": 16,
+  "episode_cap": 2000,
+  "exploration_epsilons": [
+    0.01,
+    0.1,
+    0.3,
+    1.0
+  ],
+  "split_unit": "Entire reset episode, with disjoint reset seeds",
+  "frame_size": 64,
+  "history": 4,
+  "frame_skip": 4,
+  "terminal_policy": "Drop the terminal transition because upstream max pooling can return stale terminal pixels; no terminal model is evaluated",
+  "training": {
+    "epochs": 100,
+    "updates_per_epoch": 1000,
+    "updates": 100000,
+    "batch_size": 32,
+    "conditioning_frames": 4,
+    "prediction_targets_per_sequence": 2,
+    "lr": 0.0001,
+    "weight_decay": 0.01,
+    "eps": 1e-08,
+    "warmup": 100,
+    "precision": "float32",
+    "gradient_clip": 1.0,
+    "ema": false,
+    "actor_updates": 0,
+    "reward_updates": 0
+  },
+  "checkpoint_selection": "Final scheduled update; no test-based tuning",
+  "evaluation": {
+    "sampling_steps": [
+      1,
+      3
+    ],
+    "next_frame_windows_per_episode": 8,
+    "rollout_windows_per_episode": 1,
+    "rollout_horizon": 300,
+    "rollout_report_steps": [
+      1,
+      4,
+      8,
+      16,
+      32,
+      64,
+      100,
+      200,
+      300
+    ],
+    "latency_warmup": 20,
+    "latency_repeats": 100
+  },
+  "metrics": [
+    "MSE and mean per-frame PSNR on [0,1] RGB",
+    "AlexNet LPIPS",
+    "Per-frame rollout PSNR to 300 steps",
+    "Correct-versus-random action PSNR with shared sampling noise",
+    "Batch-one median/p95 latency",
+    "Training time and memory"
+  ],
+  "limitations": [
+    "Two Atari games; generator evaluation, not RL benchmark reproduction",
+    "Policy-collected data inherits the pretrained policies' coverage",
+    "Long rollouts use episodes with sufficient remaining length; eligible cohort is reported",
+    "Action ablation is a sensitivity measure, not causal counterfactual accuracy",
+    "Pixel metrics are not a substitute for semantic correctness",
+    "No FVD or game-over model evaluation",
+    "One training seed per game.",
+    "Earlier test results have been inspected; final checkpoint selected by fixed update budget, not test metrics."
+  ],
+  "upstream_commit": "5bcd1599755b4f2fae8e5e079e02f0728e174965",
+  "validation": "Epoch 1, every 10 epochs, and final epoch; fixed windows, RNG restored afterward.",
+  "checkpointing": "Current checkpoint each epoch; retained agent snapshots every 10 epochs; final scheduled weights evaluated."
+}
