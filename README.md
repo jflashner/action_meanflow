@@ -66,7 +66,9 @@ Evaluation (`src/eval_wm.py`), on held-out test episodes:
 ## Running
 
 On a Slurm cluster (scripts written for Virginia Tech ARC): edit `scripts/arc/config.sh`, build the environment as
-described at the top of `scripts/arc/setup_env.sh`, then run `bash scripts/arc/submit_all.sh`.
+described at the top of `scripts/arc/setup_env.sh`, then run `bash scripts/arc/submit_all.sh`. By default this runs
+the core comparison (EDM, flow matching, shortcut, MeanFlow) on Boxing with one seed. `submit_all.sh --full` runs
+all 7 experiments on Boxing, Breakout and Pong with 3 seeds, and skips the runs that are already finished.
 
 Locally (Linux; on Windows, run `src/main.py` by its absolute path):
 

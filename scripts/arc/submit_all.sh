@@ -4,7 +4,8 @@
 #   2. per (experiment, game): train all seeds on one GPU, then evaluate them (waits for step 1);
 #   3. aggregate all evaluations into tables and figures (waits for step 2).
 #
-#   bash scripts/arc/submit_all.sh            # everything in config.sh
+#   bash scripts/arc/submit_all.sh            # core set: 4 methods on Boxing, 1 seed
+#   bash scripts/arc/submit_all.sh --full     # full grid: 3 games, 7 experiments, 3 seeds (skips finished runs)
 #   bash scripts/arc/submit_all.sh --smoke    # tiny end-to-end test in $SCRATCH_ROOT/smoke (about 30 min)
 #   bash scripts/arc/submit_all.sh --dry-run  # print the sbatch commands only
 #
@@ -15,6 +16,7 @@ export ARC_DIR
 for arg in "$@"; do
     case "$arg" in
         --smoke) export SMOKE=1 ;;
+        --full) export FULL=1 ;;
         --dry-run) export DRY_RUN=1 ;;
         *) echo "Unknown option $arg" >&2; exit 1 ;;
     esac

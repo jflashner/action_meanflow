@@ -7,6 +7,7 @@
 
 source "$ARC_DIR/common.sh"
 : "${EXP:?Set EXP}" "${GAME:?Set GAME}" "${SEEDS:?Set SEEDS}"
+export FORCE_EVAL=1  # this job exists to (re-)evaluate, overwrite previous results
 status=0
 for seed in $SEEDS; do
     # shellcheck disable=SC2086

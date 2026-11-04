@@ -59,6 +59,10 @@ eval_one() {  # eval_one <experiment> <game> <seed> [extra eval_wm.py args]
         echo "[$exp $game seed$seed] not finished, skipping evaluation"
         return 1
     fi
+    if [[ -f "$run_dir/eval/$EVAL_NAME.json" && "${FORCE_EVAL:-0}" != 1 ]]; then
+        echo "[$exp $game seed$seed] already evaluated ($run_dir/eval/$EVAL_NAME.json)"
+        return 0
+    fi
     local idm_args=()
     [[ -f "$IDM_ROOT/$game/idm.pt" ]] && idm_args=(--idm "$IDM_ROOT/$game/idm.pt")
     echo "[$exp $game seed$seed] evaluating"

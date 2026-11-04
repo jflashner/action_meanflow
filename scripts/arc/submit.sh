@@ -33,7 +33,7 @@ case "$kind" in
         n=$(wc -w <<< "$SEEDS")
         name="${kind}_${EXP#wm_}_${GAME}"
         time=$TRAIN_TIME
-        [[ "$kind" == eval ]] && time="06:00:00"
+        [[ "$kind" == eval ]] && time=$EVAL_TIME
         resources=("${gpu_job[@]}" --cpus-per-task=$((CPUS_PER_RUN * n)) --mem=$((MEM_PER_RUN_GB * n))G --time="$time")
         ;;
     aggregate)
