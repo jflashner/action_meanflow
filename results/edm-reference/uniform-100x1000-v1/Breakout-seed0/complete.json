@@ -1,0 +1,15 @@
+{
+  "status": "complete",
+  "method": "EDM",
+  "game": "Breakout",
+  "seed": 0,
+  "training": {
+    "epochs": 100,
+    "updates_per_epoch": 1000,
+    "updates": 100000,
+    "seconds": 13822.664566877298,
+    "actor_updates": 0,
+    "reward_updates": 0
+  },
+  "smoke": false
+}

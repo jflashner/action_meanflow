@@ -1,6 +1,6 @@
 # Course project: EDM baseline
 
-[Experiment history, setup and evaluation](docs/edm_baseline.md) for the completed three-seed EDM baseline and the newer uniform-schedule Breakout/Boxing runs.
+[Run the baseline](docs/edm_baseline.md) for Breakout and Boxing with seeds 0, 1 and 2 (100 epochs × 1,000 updates). [Completed results and figures](results/edm-reference/uniform-100x1000-v1/summary/README.md).
 
 # Diffusion for World Modeling: Visual Details Matter in Atari (NeurIPS 2024 Spotlight)
 

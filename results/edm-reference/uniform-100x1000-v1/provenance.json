@@ -1,0 +1,105 @@
+{
+  "experiment": "uniform-100x1000-v1",
+  "upstream_commit": "5bcd1599755b4f2fae8e5e079e02f0728e174965",
+  "runs": {
+    "Breakout-seed0": {
+      "dataset_manifest_sha256": "134979e67a917d1fd0dfbaf7cf55a625d704c439221cfa1926052ddd6ea6e37d",
+      "evaluation_sha256": "387f05f25aa10859d147d709ebc559caa6566772bc2fd3da1ae2342c90690094",
+      "hardware": {
+        "gpu": "NVIDIA A30",
+        "torch": "2.4.1+cu121",
+        "seed": 0
+      },
+      "slurm_job": "765675"
+    },
+    "Breakout-seed1": {
+      "dataset_manifest_sha256": "134979e67a917d1fd0dfbaf7cf55a625d704c439221cfa1926052ddd6ea6e37d",
+      "evaluation_sha256": "76ca08600619b207c24332c2d53332eca197c30b7c4c6140fefc3ff77f974089",
+      "hardware": {
+        "gpu": "NVIDIA A30",
+        "torch": "2.4.1+cu121",
+        "seed": 1
+      },
+      "slurm_job": "768476"
+    },
+    "Breakout-seed2": {
+      "dataset_manifest_sha256": "134979e67a917d1fd0dfbaf7cf55a625d704c439221cfa1926052ddd6ea6e37d",
+      "evaluation_sha256": "dd96db52161db55ae7c71787aa68201c51a2eaf38ce10b91f44477035335d5ad",
+      "hardware": {
+        "gpu": "NVIDIA A30",
+        "torch": "2.4.1+cu121",
+        "seed": 2
+      },
+      "slurm_job": "768477"
+    },
+    "Boxing-seed0": {
+      "dataset_manifest_sha256": "fc02879ad486c9840798c1cba28652cf7d0821cb456012a752f6435d4c9de0f4",
+      "evaluation_sha256": "934c64df6416f45e34b20db21dc1434210d53c2b931d06552d70b094d62e2ea2",
+      "hardware": {
+        "gpu": "NVIDIA A30",
+        "torch": "2.4.1+cu121",
+        "seed": 0
+      },
+      "slurm_job": "765676"
+    },
+    "Boxing-seed1": {
+      "dataset_manifest_sha256": "fc02879ad486c9840798c1cba28652cf7d0821cb456012a752f6435d4c9de0f4",
+      "evaluation_sha256": "261c6a30da9310478060b2edba0bd54a453e27c9f0fd55882bc39ff2e3d8e575",
+      "hardware": {
+        "gpu": "NVIDIA A30",
+        "torch": "2.4.1+cu121",
+        "seed": 1
+      },
+      "slurm_job": "768478"
+    },
+    "Boxing-seed2": {
+      "dataset_manifest_sha256": "fc02879ad486c9840798c1cba28652cf7d0821cb456012a752f6435d4c9de0f4",
+      "evaluation_sha256": "f4c0f88b3406b6f945508a43ecd94ecd7d6fdfa5234b55a4c6757d77e4493623",
+      "hardware": {
+        "gpu": "NVIDIA A30",
+        "torch": "2.4.1+cu121",
+        "seed": 2
+      },
+      "slurm_job": "768479"
+    }
+  },
+  "datasets": {
+    "Breakout": {
+      "manifest_sha256": "134979e67a917d1fd0dfbaf7cf55a625d704c439221cfa1926052ddd6ea6e37d",
+      "policy_revision": "5d4abca9af6ab1b3ab1c6fc228cacb7281130f7f",
+      "splits": {
+        "train": {
+          "episodes": 125,
+          "transitions": 101053
+        },
+        "validation": {
+          "episodes": 16,
+          "transitions": 11958
+        },
+        "test": {
+          "episodes": 16,
+          "transitions": 10345
+        }
+      }
+    },
+    "Boxing": {
+      "manifest_sha256": "fc02879ad486c9840798c1cba28652cf7d0821cb456012a752f6435d4c9de0f4",
+      "policy_revision": "5d4abca9af6ab1b3ab1c6fc228cacb7281130f7f",
+      "splits": {
+        "train": {
+          "episodes": 60,
+          "transitions": 101294
+        },
+        "validation": {
+          "episodes": 16,
+          "transitions": 26677
+        },
+        "test": {
+          "episodes": 16,
+          "transitions": 27060
+        }
+      }
+    }
+  },
+  "note": "Recorded ARC runs used the original workspace launchers. The packaged entry point relocates paths and removes unused MeanFlow branches; EDM training and evaluation functions are preserved. New runs write to a separate output directory."
+}

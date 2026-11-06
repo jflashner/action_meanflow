@@ -1,0 +1,8 @@
+{
+  "epochs": 100,
+  "updates_per_epoch": 1000,
+  "updates": 100000,
+  "seconds": 13790.524573948234,
+  "actor_updates": 0,
+  "reward_updates": 0
+}

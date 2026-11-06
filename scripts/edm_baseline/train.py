@@ -114,7 +114,7 @@ def build_config(game, seed, native, name, smoke=False):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--game', choices=['Breakout', 'Boxing'], required=True)
-    parser.add_argument('--seed', type=int, choices=[0], default=0)
+    parser.add_argument('--seed', type=int, choices=[0, 1, 2], default=0)
     parser.add_argument('--smoke', action='store_true')
     args = parser.parse_args()
     torch.set_num_threads(4)

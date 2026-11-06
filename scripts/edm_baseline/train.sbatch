@@ -11,4 +11,4 @@ cd "$EDM_CODE_ROOT"
 export EDM_WORKSPACE="${EDM_WORKSPACE:-$EDM_CODE_ROOT}"
 export OMP_NUM_THREADS=4 PYTHONUNBUFFERED=1 WANDB_MODE=offline
 export TORCH_HOME="${TORCH_HOME:-$EDM_WORKSPACE/.torch-cache}"
-srun "${EDM_PYTHON:-$EDM_CODE_ROOT/.venv/bin/python}" scripts/edm_baseline/train.py --game "${1:?Specify Breakout or Boxing}" --seed 0 "${@:2}"
+srun "${EDM_PYTHON:-$EDM_CODE_ROOT/.venv/bin/python}" scripts/edm_baseline/train.py --game "${1:?Specify Breakout or Boxing}" "${@:2}"

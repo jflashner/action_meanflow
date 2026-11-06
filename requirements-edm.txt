@@ -1,3 +1,4 @@
 -r requirements.txt
 torchvision==0.19.1
 lpips==0.1.4
+matplotlib==3.9.4

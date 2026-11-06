@@ -17,6 +17,10 @@ def main():
     verify_backbone()
     reports = []
     for game, actions, parameters in [('Breakout', 4, 4405955), ('Boxing', 18, 4406851)]:
+        for seed in (0, 1, 2):
+            seeded = build_config(game, seed, Path('/tmp/unused-native-data'), f'{game}-seed{seed}')
+            assert seeded.common.seed == seed
+            assert seeded.training.num_final_epochs * seeded.denoiser.training.steps_per_epoch == 100000
         cfg = build_config(game, 0, Path('/tmp/unused-native-data'), game)
         assert cfg.training.num_final_epochs == 100
         assert cfg.denoiser.training.steps_first_epoch == cfg.denoiser.training.steps_per_epoch == 1000

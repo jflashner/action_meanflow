@@ -5,7 +5,9 @@
     "Boxing"
   ],
   "training_seeds": [
-    0
+    0,
+    1,
+    2
   ],
   "policy_repository": "eloialonso/diamond",
   "policy_revision": "5d4abca9af6ab1b3ab1c6fc228cacb7281130f7f",
@@ -81,7 +83,7 @@
     "Action ablation is a sensitivity measure, not causal counterfactual accuracy",
     "Pixel metrics are not a substitute for semantic correctness",
     "No FVD or game-over model evaluation",
-    "One training seed per game.",
+    "Three training seeds share the same fixed dataset per game; variability does not capture independent data collection.",
     "Earlier test results have been inspected; final checkpoint selected by fixed update budget, not test metrics."
   ],
   "upstream_commit": "5bcd1599755b4f2fae8e5e079e02f0728e174965",
